@@ -23,6 +23,21 @@ from sklearn.preprocessing import LabelEncoder
 from keras import models
 from keras import layers
 from keras import regularizers
+from keras.models import Sequential
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense,Dropout,LSTM
+from keras.preprocessing import sequence,text
+from keras.preprocessing.text import Tokenizer
+from keras.models import Sequential
+from keras.layers import Dense,Dropout,Embedding,LSTM,Conv1D,GlobalMaxPooling1D,Flatten,MaxPooling1D,GRU,SpatialDropout1D,Bidirectional
+from keras.callbacks import EarlyStopping
+from keras.utils import to_categorical
+from keras.losses import categorical_crossentropy
+from keras.optimizers import Adam
+
+
+
 
 NB_WORDS = 10000  # Parameter indicating the number of words we'll put in the dictionary
 VAL_SIZE = 400  # Size of the validation set
@@ -31,6 +46,9 @@ BATCH_SIZE = 512  # Size of the batches used in the mini-batch gradient descent
 MAX_LEN = 34  # Maximum number of words in a sequence
 GLOVE_DIM = 50  # Number of dimensions of the GloVe word embeddings
 INPUT_PATH = '../input'  # Path where all input files are stored
+max_features=500
+embed_dim = 128
+lstm_out = 196
 
 root = Path('../')
 input_path = root / 'input/' 
@@ -52,6 +70,8 @@ def deep_model(model, X_train, y_train, X_valid, y_valid):
     Output:
         model training history
     '''
+   
+
     model.compile(optimizer='Adam'
                   , loss='categorical_crossentropy'
                   , metrics=['accuracy'])
@@ -139,7 +159,7 @@ def remove_mentions(input_text):
     '''
     return re.sub(r'@\w+', '', input_text)
 
- 
+df = pd.read_csv('dataset for sentiment analysis.tsv', delimiter = '\t', quoting = 3)
 df.columns = ['Sentiment', 'SentimentText']
 df.text = df.SentimentText.apply(remove_stopwords).apply(remove_mentions)
 
@@ -184,12 +204,12 @@ assert X_train_emb.shape[0] == y_train_emb.shape[0]
 
 print('Shape of validation set:',X_valid_emb.shape)
 
-
-emb_model = models.Sequential()
-emb_model.add(layers.Embedding(NB_WORDS, 8, input_length=MAX_LEN))
-emb_model.add(layers.Flatten())
-emb_model.add(layers.Dense(2, activation='softmax'))
-emb_model.summary()
+X_train.shape[:1]
+    model = Sequential()
+    model.add(Embedding(max_features, embed_dim,input_length = MAX_LEN))
+    model.add(SpatialDropout1D(0.4))
+    model.add(LSTM(lstm_out, dropout=0.2, recurrent_dropout=0.2))
+    model.add(Dense(1,activation='softmax'))
 
 emb_history = deep_model(emb_model, X_train_emb, y_train_emb, X_valid_emb, y_valid_emb)
 
